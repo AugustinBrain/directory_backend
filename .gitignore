@@ -1,2 +1,5 @@
 venv/ 
 .vscode
+run.bat
+migrate.bat
+make.bat
