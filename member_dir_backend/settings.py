@@ -39,7 +39,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1', 'http://localhost:8000', 'https://directorybackend-production.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ["https://directorybackend-production.up.railway.app", "http://127.0.0.1:8000", "http://localhost:8000"]
 
 # REST_FRAMEWORK = {
 #     "DEFAULT_AUTHENTICATION_CLASSES": (
