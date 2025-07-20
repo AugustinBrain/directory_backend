@@ -3,3 +3,4 @@ venv/
 run.bat
 migrate.bat
 make.bat
+.env

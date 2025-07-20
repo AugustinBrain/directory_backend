@@ -124,11 +124,11 @@ WSGI_APPLICATION = 'member_dir_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'railway',
-        'USER': 'postgres',
-        'PASSWORD': 'vqCBHCDymSKhiINxvsIqLCxFBvAILpHt',
-        'HOST': 'crossover.proxy.rlwy.net',
-        'PORT': '55194',
+        'NAME': os.getenv("DB_NAME"),
+        'USER': os.getenv("DB_USER"),
+        'PASSWORD': os.getenv("DB_PASSWORD"),
+        'HOST': os.getenv("DB_HOST"),
+        'PORT': os.getenv("DB_PORT"),
     }
 }
 
@@ -183,9 +183,9 @@ CORS_ALLOWS_CREDENTIALS = True
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'debx9uf7g',
-    'API_KEY': '478588242586261',
-    'API_SECRET': 'ylhT2tOl3Din6EkehEYNTupOc7g',
+    'CLOUD_NAME': os.getenv("CLOUD_NAME"),
+    'API_KEY': os.getenv("API_KEY"),
+    'API_SECRET': os.getenv("API_SECRET"),
 }
 
 cloudinary.config( 
