@@ -77,7 +77,7 @@ class Member(models.Model):
 
 class AcademicBackground(models.Model):
     academic_record_id = models.CharField(primary_key=True, max_length=255)
-    member_id1 = models.ForeignKey(Member, on_delete=models.CASCADE, null=False, blank=False, db_column='member_id')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, null=False, blank=False, db_column='member_id')
     period = models.CharField(max_length=100, null=False, blank=False)
     school = models.CharField(max_length=255, null=False, blank=False)
     degree = models.CharField(max_length=255, null=False, blank=False)
@@ -93,7 +93,7 @@ class AcademicBackground(models.Model):
     
 class FamilyDetail(models.Model):
     family_member_id = models.CharField(primary_key=True, max_length=255)
-    member_id = models.ForeignKey(Member, on_delete=models.CASCADE, db_column='member_id')
+    member = models.ForeignKey(Member, on_delete=models.CASCADE, db_column='member_id')
     relation = models.CharField(max_length=100, null=True, blank=True)
     name = models.CharField(max_length=100, null=False, blank=False)
     birthday = models.DateField(null=True, blank=True)

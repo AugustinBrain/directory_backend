@@ -142,12 +142,12 @@ class AcademicBackgroundAdmin(admin.ModelAdmin):
     list_display = ['academic_record_id', 'get_member_name', 'school', 'degree', 'period', 'graduation']
     list_filter = ['graduation', 'degree']
     search_fields = ['academic_record_id', 'member_id1__full_name', 'school', 'degree']
-    autocomplete_fields = ['member_id1']
+    autocomplete_fields = ['member_id']
     
     def get_member_name(self, obj):
-        return obj.member_id1.full_name
+        return obj.member_id.full_name
     get_member_name.short_description = 'Member Name'
-    get_member_name.admin_order_field = 'member_id1__full_name'
+    get_member_name.admin_order_field = 'member_id__full_name'
 
 
 class FamilyDetailAdmin(admin.ModelAdmin):
