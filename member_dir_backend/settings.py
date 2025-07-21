@@ -201,22 +201,3 @@ cloudinary.config(
   api_key = CLOUDINARY_STORAGE['API_KEY'], 
   api_secret = CLOUDINARY_STORAGE['API_SECRET'] 
 )
-
-# Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # or your email provider
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'austinbrain25@gmail.com'
-EMAIL_HOST_PASSWORD = 'xqpb qbcl ntct iqmt'
-DEFAULT_FROM_EMAIL = 'austinbrain25@gmail.com'
-
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:8000/1",  # DB index 1
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
