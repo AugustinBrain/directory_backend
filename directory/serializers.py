@@ -51,7 +51,7 @@ class AcademicBackgroundSerializer(serializers.ModelSerializer):
     class Meta:
         model = AcademicBackground
         fields = ['academic_record_id', 'period', 'school', 'degree', 'graduation']
-        read_only_fields = ['academic_record_id']
+        read_only_fields = ['member_id', 'academic_record_id']
 
     def create(self, validated_data):
         validated_data.pop('academic_record_id', None)  # academic_record_id is not set during creation
