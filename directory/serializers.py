@@ -9,32 +9,40 @@ class AdminAccountSerializer(serializers.ModelSerializer):
         read_only_fields = ['account_id']
 
 class CreateAdminAccountSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=6)
-    confirm_password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
     
     class Meta:
         model = AdminAccount
-        fields = ['email', 'name', 'password', 'confirm_password', 'img_path', 'permission']
-    
-    def validate(self, data):
-        if data['password'] != data['confirm_password']:
-            raise serializers.ValidationError("Passwords don't match")
-        return data
+        fields = ['account_id', 'email', 'name', 'password', 'img_path', 'permission']
     
     def create(self, validated_data):
-        # Remove confirm_password from validated_data
-        validated_data.pop('confirm_password', None)
-        validated_data.pop('account_id', None)  # account_id is not set during creation
-        
-        # Create admin account
+        password = validated_data.pop('password')
         admin = AdminAccount(**validated_data)
-        admin.set_password(validated_data['password'])
+        admin.set_password(password)
         admin.save()
         return admin
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    password = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class VerifyOTPSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp_code = serializers.CharField(max_length=6)
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp_code = serializers.CharField(max_length=6)
+    new_password = serializers.CharField(min_length=8, write_only=True)
+    confirm_password = serializers.CharField(min_length=8, write_only=True)
+    
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError("Passwords don't match")
+        return data
 
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
