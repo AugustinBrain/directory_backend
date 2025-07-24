@@ -39,7 +39,7 @@ class LoginSerializer(serializers.Serializer):
 class MemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = Member
-        fields = ['member_id', 'full_name', 'region', 'nation', 'nationality', 'birthday', 'gender', 'department', 'organization', 'current_post', 
+        fields = ['member_id', 'profile_photo_url', 'full_name', 'region', 'nation', 'nationality', 'birthday', 'gender', 'department', 'organization', 'current_post', 
                   'position', 'blessing', 'date_of_joining', 'email', 'phone_no', 'address', 'is_deleted']
         read_only_fields = ['member_id']
 

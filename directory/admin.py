@@ -4,18 +4,40 @@ from django.urls import path
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.http import HttpResponseRedirect
+from django import forms
+
 from .models import (
     AdminAccount, Member, AcademicBackground, FamilyDetail, 
     PublicMissionPost, WorkExperience, TrainingCourse, 
     Qualification, AwardsRecognition, DisciplinaryAction, SpecialNote
 )
 
+class AdminAccountForm(forms.ModelForm):
+    password = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput,
+        help_text="Leave blank to keep the current password."
+    )
+
+    class Meta:
+        model = AdminAccount
+        fields = '__all__'
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if not password and self.instance.pk:
+            # Return existing hashed password if left blank
+            return self.instance.password
+        return password
 
 class AdminAccountAdmin(admin.ModelAdmin):
+    form = AdminAccountForm  # ← USE CUSTOM FORM
+
     list_display = ['account_id', 'email', 'name', 'permission', 'get_img_preview']
     list_filter = ['permission']
     search_fields = ['account_id', 'email', 'name']
-    readonly_fields = ['password', 'get_img_preview']
+    readonly_fields = ['get_img_preview', 'account_id']
+    
     fieldsets = (
         ('Account Information', {
             'fields': ('account_id', 'email', 'name', 'permission')
@@ -25,20 +47,22 @@ class AdminAccountAdmin(admin.ModelAdmin):
         }),
         ('Security', {
             'fields': ('password',),
-            'description': 'Password is automatically hashed. Use the change password form to update.'
-        })
+            'description': 'Leave blank to keep current password unchanged when editing.'
+        }),
     )
-    
+
     def get_img_preview(self, obj):
         if obj.img_path:
             return format_html('<img src="{}" width="50" height="50" style="border-radius: 25px;" />', obj.img_path.url)
         return "No Image"
     get_img_preview.short_description = 'Profile Image'
-    
+
     def save_model(self, request, obj, form, change):
-        if not change:  # Creating new admin
-            if 'password' in form.cleaned_data and form.cleaned_data['password']:
-                obj.set_password(form.cleaned_data['password'])
+        # Only re-hash if new password was provided (not already hashed)
+        obj.account_id = 1
+        password = form.cleaned_data.get('password')
+        if password and not password.startswith('pbkdf2_'):  # or however your hashing prefix looks
+            obj.set_password(password)
         super().save_model(request, obj, form, change)
 
 
@@ -50,12 +74,12 @@ class MemberAdmin(admin.ModelAdmin):
     ]
     list_filter = ['is_deleted', 'gender', 'region', 'department', 'organization']
     search_fields = ['member_id', 'full_name', 'email', 'phone_no']
-    readonly_fields = ['get_profile_preview']
+    readonly_fields = ['get_profile_preview', 'member_id']
     actions = ['soft_delete_members', 'restore_members']
     
     fieldsets = (
         ('Basic Information', {
-            'fields': ('member_id', 'full_name', 'profile_photo_url', 'get_profile_preview')
+            'fields': ('full_name', 'profile_photo_url', 'get_profile_preview')
         }),
         ('Personal Details', {
             'fields': ('birthday', 'gender', 'nationality')
@@ -93,7 +117,7 @@ class MemberAdmin(admin.ModelAdmin):
                 return format_html(
                     '<a class="button" href="/admin/directory/member/soft_delete_member/{}/" '
                     'style="background-color: #dc3545; color: white; padding: 5px 10px; '
-                    'text-decoration: none; border-radius: 3px;">Soft Delete</a>',
+                    'text-decoration: none; border-radius: 3px;">Delete</a>',
                     obj.member_id
                 )
         return ""
@@ -136,30 +160,48 @@ class MemberAdmin(admin.ModelAdmin):
         except Member.DoesNotExist:
             messages.error(request, 'Member not found.')
         return HttpResponseRedirect('/admin/directory/member/')
+    
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.member_id = 1  # Set dummy value to satisfy DB trigger
+        super().save_model(request, obj, form, change)
 
 
 class AcademicBackgroundAdmin(admin.ModelAdmin):
     list_display = ['academic_record_id', 'get_member_name', 'school', 'degree', 'period', 'graduation']
     list_filter = ['graduation', 'degree']
-    search_fields = ['academic_record_id', 'member_id1__full_name', 'school', 'degree']
-    autocomplete_fields = ['member_id']
+    search_fields = ['academic_record_id', 'member__full_name', 'school', 'degree']
+    autocomplete_fields = ['member']
+    readonly_fields = ['academic_record_id']
     
     def get_member_name(self, obj):
-        return obj.member_id.full_name
+        return obj.member.full_name
     get_member_name.short_description = 'Member Name'
-    get_member_name.admin_order_field = 'member_id__full_name'
+    get_member_name.admin_order_field = 'member__full_name'
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.academic_record_id = 1  # Set dummy value to trigger DB auto-generation
+        super().save_model(request, obj, form, change)
+
 
 
 class FamilyDetailAdmin(admin.ModelAdmin):
     list_display = ['family_member_id', 'get_member_name', 'name', 'relation', 'birthday', 'blessing']
     list_filter = ['relation', 'blessing']
-    search_fields = ['family_member_id', 'member_id__full_name', 'name', 'relation']
-    autocomplete_fields = ['member_id']
+    search_fields = ['family_member_id', 'member__full_name', 'name', 'relation']
+    autocomplete_fields = ['member']
+    readonly_fields = ['family_member_id']
     
     def get_member_name(self, obj):
-        return obj.member_id.full_name
+        return obj.member.full_name
     get_member_name.short_description = 'Member Name'
-    get_member_name.admin_order_field = 'member_id__full_name'
+    get_member_name.admin_order_field = 'member__full_name'
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.family_member_id = 1
+        super().save_model(request, obj, form, change)
 
 
 class PublicMissionPostAdmin(admin.ModelAdmin):
@@ -167,11 +209,17 @@ class PublicMissionPostAdmin(admin.ModelAdmin):
     list_filter = ['organization', 'final_position', 'department']
     search_fields = ['mission_id', 'member__full_name', 'organization', 'final_position']
     autocomplete_fields = ['member']
+    readonly_fields = ['mission_id']
     
     def get_member_name(self, obj):
         return obj.member.full_name
     get_member_name.short_description = 'Member Name'
     get_member_name.admin_order_field = 'member__full_name'
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.mission_id = 1
+        super().save_model(request, obj, form, change)
 
 
 class WorkExperienceAdmin(admin.ModelAdmin):
@@ -179,11 +227,17 @@ class WorkExperienceAdmin(admin.ModelAdmin):
     list_filter = ['organization_name', 'final_position', 'department']
     search_fields = ['experience_id', 'member__full_name', 'organization_name', 'final_position']
     autocomplete_fields = ['member']
+    readonly_fields = ['experience_id']
     
     def get_member_name(self, obj):
         return obj.member.full_name
     get_member_name.short_description = 'Member Name'
     get_member_name.admin_order_field = 'member__full_name'
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.experience_id = 1
+        super().save_model(request, obj, form, change)
 
 
 class TrainingCourseAdmin(admin.ModelAdmin):
@@ -191,11 +245,17 @@ class TrainingCourseAdmin(admin.ModelAdmin):
     list_filter = ['type', 'status', 'organization']
     search_fields = ['training_id', 'member__full_name', 'name_of_course', 'organization']
     autocomplete_fields = ['member']
+    readonly_fields = ['training_id']
     
     def get_member_name(self, obj):
         return obj.member.full_name
     get_member_name.short_description = 'Member Name'
     get_member_name.admin_order_field = 'member__full_name'
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.training_id = 1
+        super().save_model(request, obj, form, change)
 
 
 class QualificationAdmin(admin.ModelAdmin):
@@ -203,6 +263,7 @@ class QualificationAdmin(admin.ModelAdmin):
     list_filter = ['date_acquisition']
     search_fields = ['qualification_id', 'member__full_name', 'name_qualification']
     autocomplete_fields = ['member']
+    readonly_fields = ['qualification_id']
     
     def get_member_name(self, obj):
         return obj.member.full_name
@@ -215,12 +276,18 @@ class QualificationAdmin(admin.ModelAdmin):
         return "No remarks"
     get_remarks_preview.short_description = 'Remarks Preview'
 
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.qualification_id = 1
+        super().save_model(request, obj, form, change)
+
 
 class AwardsRecognitionAdmin(admin.ModelAdmin):
     list_display = ['award_id', 'get_member_name', 'type', 'organization', 'date', 'get_description_preview']
     list_filter = ['type', 'organization', 'date']
     search_fields = ['award_id', 'member__full_name', 'type', 'organization']
     autocomplete_fields = ['member']
+    readonly_fields = ['award_id']
     
     def get_member_name(self, obj):
         return obj.member.full_name
@@ -233,12 +300,18 @@ class AwardsRecognitionAdmin(admin.ModelAdmin):
         return "No description"
     get_description_preview.short_description = 'Description Preview'
 
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.award_id = 1
+        super().save_model(request, obj, form, change)
+
 
 class DisciplinaryActionAdmin(admin.ModelAdmin):
     list_display = ['penalty_id', 'get_member_name', 'date', 'get_reason_preview']
     list_filter = ['date']
     search_fields = ['penalty_id', 'member__full_name', 'reason']
     autocomplete_fields = ['member']
+    readonly_fields = ['penalty_id']
     
     def get_member_name(self, obj):
         return obj.member.full_name
@@ -249,12 +322,18 @@ class DisciplinaryActionAdmin(admin.ModelAdmin):
         return obj.reason[:50] + '...' if len(obj.reason) > 50 else obj.reason
     get_reason_preview.short_description = 'Reason Preview'
 
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.penalty_id = 1
+        super().save_model(request, obj, form, change)
+
 
 class SpecialNoteAdmin(admin.ModelAdmin):
     list_display = ['note_id', 'get_member_name', 'date_written', 'get_details_preview']
     list_filter = ['date_written']
     search_fields = ['note_id', 'member__full_name', 'details']
     autocomplete_fields = ['member']
+    readonly_fields = ['note_id']
     
     def get_member_name(self, obj):
         return obj.member.full_name
@@ -266,6 +345,11 @@ class SpecialNoteAdmin(admin.ModelAdmin):
             return obj.details[:50] + '...' if len(obj.details) > 50 else obj.details
         return "No details"
     get_details_preview.short_description = 'Details Preview'
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.note_id = 1
+        super().save_model(request, obj, form, change)
 
 
 # Register all models with their respective admin classes
