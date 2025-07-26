@@ -3,6 +3,9 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password, check_password
 from cloudinary.models import CloudinaryField
 
+from django.utils import timezone
+import random
+from datetime import datetime, timedelta
 
 class AdminAccount(models.Model):
     SUPERADMIN = 'superadmin'
@@ -37,6 +40,25 @@ class AdminAccount(models.Model):
     
     def __str__(self):
         return f"{self.name} ({self.permission})"
+    
+class PasswordResetOTP(models.Model):
+    account = models.ForeignKey(AdminAccount, on_delete=models.CASCADE)
+    otp_code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(minutes=10)  # OTP expires in 10 minutes
+        super().save(*args, **kwargs)
+    
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+    
+    @classmethod
+    def generate_otp(cls):
+        return str(random.randint(100000, 999999))
 
 class Member(models.Model):
     MALE = 'Male'

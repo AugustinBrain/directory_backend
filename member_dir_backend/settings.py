@@ -201,3 +201,30 @@ cloudinary.config(
   api_key = CLOUDINARY_STORAGE['API_KEY'], 
   api_secret = CLOUDINARY_STORAGE['API_SECRET'] 
 )
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # or your email provider
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'austinbrain25@gmail.com'
+EMAIL_HOST_PASSWORD = 'obhv niwh nrtr nird'  # Use app password for Gmail
+DEFAULT_FROM_EMAIL = 'Admin Portal <austinbrain25@gmail.com>'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': 'django_errors.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+    },
+}

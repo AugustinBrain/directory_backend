@@ -9,6 +9,10 @@ urlpatterns = [
     path('accounts/', views.getAccounts, name='get-accounts'),  # view all accounts
     path('create-account/', views.createAccount, name='create-admin'),  # admin creation
 
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('verify-otp/', views.verify_otp, name='verify_otp'),
+    path('reset-password/', views.reset_password, name='reset_password'),
+
     path('', views.getDashboard, name='get-dashboard'),
     path('members/', views.getMembers, name='get-members'),
     path('members/create/', views.createMember, name='create-member'), # member creation
