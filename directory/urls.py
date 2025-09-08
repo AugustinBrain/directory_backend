@@ -19,6 +19,7 @@ urlpatterns = [
     path('members/<str:member_id>/', views.getMember, name='get-member'), # member selection
     path('members/<str:member_id>/update/', views.updateMember, name='update-member'), # member update
     path('members/<str:member_id>/delete/', views.deleteMember, name='delete-member'), # member soft delete
+    path('export/', views.exportMembersExcel, name='export-member'), # member export to excel
 
     path('members/<str:member_id>/academic-background/', views.getAcademicBackgrounds, name='get-academic-background'),
     path('members/<str:member_id>/academic-background/create/', views.createAcademicBackground, name='create-academic-backgrounds'), # academic background creation

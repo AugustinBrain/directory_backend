@@ -16,6 +16,12 @@ from django.utils.html import strip_tags
 from django.conf import settings
 import logging
 
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.drawing.image import Image as ExcelImage
+import requests
+from io import BytesIO
+
 logger = logging.getLogger(__name__)
 
 def send_otp_email(email, otp_code, admin_name):
@@ -790,7 +796,80 @@ def deleteSpecialNote(request, member_id, note_id):
     return Response({'message': 'Special note deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 
+@api_view(['GET'])
+def exportMembersExcel(request):
+    members = Member.objects.filter(is_deleted=False)
 
+    # Create workbook and sheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Members"
+
+    # Define headers
+    headers = [
+        "Member ID", "Full Name", "Region", "Nation", "Nationality",
+        "Birthday", "Gender", "Department", "Organization",
+        "Current Post", "Position", "Blessing", "Date of Joining",
+        "Email", "Phone No", "Address", "Profile Photo"
+    ]
+    ws.append(headers)
+
+    for member in members:
+        # Write text data
+        row = [
+            member.member_id,
+            member.full_name,
+            member.region,
+            member.nation,
+            member.nationality,
+            member.birthday.strftime("%Y-%m-%d") if member.birthday else "",
+            member.gender,
+            member.department or "",
+            member.organization or "",
+            member.current_post or "",
+            member.position or "",
+            member.blessing,
+            member.date_of_joining.strftime("%Y-%m-%d") if member.date_of_joining else "",
+            member.email,
+            member.phone_no,
+            member.address,
+            ""  # placeholder for photo
+        ]
+        ws.append(row)
+
+        # Add photo in the last column (Profile Photo)
+        row_idx = ws.max_row
+        if member.profile_photo_url:
+            try:
+                # Get the actual URL
+                photo_url = member.profile_photo_url.url  
+
+                # Optional: Cloudinary resize transformation to keep file small
+                if "res.cloudinary.com" in photo_url:
+                    photo_url += "?w=80&h=80&c=fill"
+
+                response = requests.get(photo_url)
+                if response.status_code == 200:
+                    img_data = BytesIO(response.content)
+                    img = ExcelImage(img_data)
+                    img.width, img.height = 80, 80
+                    img.anchor = f"R{row_idx}"
+                    ws.add_image(img)
+
+                    ws.row_dimensions[row_idx].height = 60
+                    ws.column_dimensions["R"].width = 20
+                else:
+                    print(f"Image request failed ({response.status_code}) for {member.full_name}")
+            except Exception as e:
+                print(f"Error loading image for {member.full_name}: {e}")
+
+    # Return as Excel file response
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="ffwpu-members.xlsx"'
+    wb.save(response)
+    return response
 
 
 

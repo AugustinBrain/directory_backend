@@ -4,3 +4,8 @@ run.bat
 migrate.bat
 make.bat
 .env
+__pycache__/
+*.pyc
+*.pyo
+*.db
+.env
