@@ -39,7 +39,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-CSRF_TRUSTED_ORIGINS = ["https://ffwpu-member-dir.up.railway.app", "http://127.0.0.1:8000", "http://localhost:8000", "http://localhost:5173", "https://ffwpu-member-dir-dthx.vercel.app",]
+CSRF_TRUSTED_ORIGINS = ["https://ffwpu-member-dir.up.railway.app", "http://127.0.0.1:8000", "http://localhost:8000", "http://localhost:5173", "https://ffwpu-member-dir-dthx.vercel.app", "https://ffwpu-member-dir-z8yi.vercel.app", ]
 
 # REST_FRAMEWORK = {
 #     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -191,6 +191,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "https://ffwpu-member-dir.up.railway.app",
     "https://ffwpu-member-dir-dthx.vercel.app",
+    "https://ffwpu-member-dir-z8yi.vercel.app",
 ]
 
 SESSION_COOKIE_SAMESITE = "None"
